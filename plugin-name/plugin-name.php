@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The plugin bootstrap file
  *
@@ -65,6 +64,14 @@ register_deactivation_hook( __FILE__, 'deactivate_plugin_name' );
 require plugin_dir_path( __FILE__ ) . 'includes/class-plugin-name.php';
 
 /**
+ * Display an error notice for missing WooCommerce.
+ */
+function display_woocommerce_missing_notice() {
+	$message = 'Your WooCommerce Extension requires WooCommerce to be installed and active.';
+	echo sprintf( '<div class="notice notice-error"><p>%s</p></div>', esc_html( $message ) );
+}
+
+/**
  * Begins execution of the plugin.
  *
  * Since everything within the plugin is registered via hooks,
@@ -73,10 +80,17 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-plugin-name.php';
  *
  * @since    1.0.0
  */
-function run_plugin_name() {
+function init_plugin_name() {
+	if ( class_exists( 'WooCommerce' ) ) {
+		$plugin = new Plugin_Name();
+		$plugin->run();
+	} else {
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
-	$plugin = new Plugin_Name();
-	$plugin->run();
-
+		// Display an error notice if WooCommerce is not active.
+		add_action( 'admin_notices', 'display_woocommerce_missing_notice' );
+		deactivate_plugins( plugin_basename( __FILE__ ) );
+	}
 }
-run_plugin_name();
+
+add_action( 'init', 'init_plugin_name' );
